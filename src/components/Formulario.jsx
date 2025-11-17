@@ -1,50 +1,49 @@
-import { useState } from "react";
 import { Form, Button } from "react-bootstrap";
+import { useForm } from "react-hook-form";
 
 const Formulario = ({ handleAddMovie }) => {
-  const [formData, setFormData] = useState({
-    nombre: "",
-    descripcion: "",
-    categoria: "",
-  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.nombre || !formData.descripcion || !formData.categoria) {
-      alert("Por favor, completa todos los campos");
-      return;
-    }
+  const onSubmit = (data) => {
     const newMovie = {
-      ...formData,
+      ...data,
       id: Math.random(),
     };
     handleAddMovie(newMovie);
-
-    setFormData({
-      nombre: "",
-      descripcion: "",
-      categoria: "",
-    });
+    reset(); // limpia el formulario
   };
 
   return (
-    <Form className="bg-dark text-white p-4 rounded-3" onSubmit={handleSubmit}>
+    <Form
+      className="bg-dark text-white p-4 rounded-3"
+      onSubmit={handleSubmit(onSubmit)}
+    >
       <Form.Group className="mb-3" controlId="formMovieName">
         <Form.Label>Nombre:</Form.Label>
         <Form.Control
           type="text"
           placeholder="Ingresa el nombre de la película"
-          name="nombre"
-          value={formData.nombre}
-          onChange={handleChange}
+          {...register("nombre", {
+            required: "Ingresa el nombre de la película",
+            minLength: {
+              value: 3,
+              message: "El nombre debe tener al menos 3 caracteres",
+            },
+            maxLength: {
+              value: 50,
+              message: "El nombre no puede tener más de 50 caracteres",
+            },
+          })}
+          isInvalid={!!errors.nombre}
         />
+        <Form.Control.Feedback type="invalid">
+          {errors.nombre?.message}
+        </Form.Control.Feedback>
       </Form.Group>
 
       <Form.Group className="mb-3" controlId="formMovieDescription">
@@ -52,22 +51,32 @@ const Formulario = ({ handleAddMovie }) => {
         <Form.Control
           as="textarea"
           rows={3}
-          type="text"
           placeholder="Descripción de la película"
-          name="descripcion"
-          value={formData.descripcion}
-          onChange={handleChange}
+          {...register("descripcion", {
+            required: "Ingresa una descripción",
+            minLength: {
+              value: 10,
+              message: "La descripción debe tener al menos 10 caracteres",
+            },
+            maxLength: {
+              value: 200,
+              message: "La descripción no puede tener más de 200 caracteres",
+            },
+          })}
+          isInvalid={!!errors.descripcion}
         />
+        <Form.Control.Feedback type="invalid">
+          {errors.descripcion?.message}
+        </Form.Control.Feedback>
       </Form.Group>
 
       <Form.Group className="mb-3">
         <Form.Label>Selecciona una categoría:</Form.Label>
         <Form.Select
-          onChange={handleChange}
-          name="categoria"
-          value={formData.categoria}
+          {...register("categoria", { required: "Selecciona una categoría" })}
+          isInvalid={!!errors.categoria}   
         >
-          <option>---Seleccione una categoría---</option>
+          <option value="">---Seleccione una categoría---</option>
           <option>Comedia</option>
           <option>Drama</option>
           <option>Infantil</option>
@@ -76,6 +85,9 @@ const Formulario = ({ handleAddMovie }) => {
           <option>Suspenso</option>
           <option>Romántico</option>
         </Form.Select>
+        <Form.Control.Feedback type="invalid">
+          {errors.categoria?.message}
+        </Form.Control.Feedback>
       </Form.Group>
 
       <Button variant="primary" type="submit" className="d-flex ms-auto">
